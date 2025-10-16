@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.25), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(14, 165, 233, 0.2), transparent 40%),
+    #020617;
+  color: rgba(241, 245, 249, 0.92);
+}
+
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(18px);
+}
+
+.circular-visualizer {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+
+.circular-visualizer canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.tab-gradient {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(14, 165, 233, 0.08));
+}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface UseAudioRecorderOptions {
   onLevel?: (level: number) => void;
+  deviceId?: string;
 }
 
 export interface AudioRecorderControls {
@@ -12,7 +13,7 @@ export interface AudioRecorderControls {
   duration: number;
 }
 
-export function useAudioRecorder({ onLevel }: UseAudioRecorderOptions = {}): AudioRecorderControls {
+export function useAudioRecorder({ onLevel, deviceId }: UseAudioRecorderOptions = {}): AudioRecorderControls {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -65,7 +66,10 @@ export function useAudioRecorder({ onLevel }: UseAudioRecorderOptions = {}): Aud
 
   const start = useCallback(async () => {
     if (isRecording) return;
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: deviceId ? { deviceId: { exact: deviceId } } : true,
+      video: false
+    });
     streamRef.current = stream;
 
     const audioContext = new AudioContext();

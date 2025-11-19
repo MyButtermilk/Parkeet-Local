@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as Tabs from "./components/Tabs";
 import { Badge, Button, Card } from "./components/ui";
 
@@ -49,6 +49,7 @@ function App(): JSX.Element {
   const [hotkeyRegistration, setHotkeyRegistration] = useState<HotkeyRegistration | null>(null);
   const [statusMessage, setStatusMessage] = useState("Idle");
   const [isRecording, setIsRecording] = useState(false);
+  const [insertAfterHotkey, setInsertAfterHotkey] = useState(false);
   const recorderRef = useRef<MicrophoneRecorderHandle | null>(null);
 
   useEffect(() => {
@@ -79,6 +80,29 @@ function App(): JSX.Element {
     [settings]
   );
 
+  const insertTranscriptText = useCallback(async (text: string) => {
+    if (!text) return;
+
+    setStatusMessage("Inserting transcript…");
+    try {
+      const inserted = await window.desktop?.insertTextAtCursor?.(text);
+      if (inserted) {
+        setStatusMessage("Transcript inserted via hotkey");
+        return;
+      }
+    } catch (error) {
+      console.warn("Failed to insert via desktop bridge", error);
+    }
+
+    try {
+      await navigator.clipboard.writeText(text);
+      setStatusMessage("Transcript copied to clipboard");
+    } catch (error) {
+      console.warn("Failed to copy transcript to clipboard", error);
+      setStatusMessage("Unable to insert transcript automatically");
+    }
+  }, []);
+
   const handleTranscription = async (
     blob: Blob,
     source: TranscriptHistoryItem["source"],
@@ -104,6 +128,10 @@ function App(): JSX.Element {
         filename
       };
       setHistory((prev) => [transcript, ...prev]);
+      if (source === "microphone" && insertAfterHotkey) {
+        await insertTranscriptText(response.text);
+        setInsertAfterHotkey(false);
+      }
       return transcript;
     } finally {
       setIsProcessing(false);
@@ -130,6 +158,7 @@ function App(): JSX.Element {
         await recorderRef.current?.stopRecording();
       } else {
         setStatusMessage("Hotkey toggled recording");
+        setInsertAfterHotkey(true);
         await recorderRef.current?.startRecording();
       }
     },
@@ -242,6 +271,10 @@ function App(): JSX.Element {
                   onTranscribe={handleTranscription}
                   isProcessing={isProcessing}
                   onRecordingChange={setIsRecording}
+                  onCancel={() => {
+                    setInsertAfterHotkey(false);
+                    setStatusMessage("Idle");
+                  }}
                 />
               </div>
             </Tabs.Content>

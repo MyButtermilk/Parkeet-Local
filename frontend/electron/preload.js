@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("desktop", {
   registerHotkey: (hotkey) => ipcRenderer.invoke("desktop:register-hotkey", hotkey),
+  insertTextAtCursor: (text) => ipcRenderer.invoke("desktop:insert-text", text),
   onHotkey: (callback) => {
     ipcRenderer.on("desktop:hotkey", callback);
     return () => ipcRenderer.removeListener("desktop:hotkey", callback);

@@ -14,6 +14,7 @@ interface MicrophoneRecorderProps {
   isProcessing: boolean;
   inputDeviceId?: string;
   onRecordingChange?: (state: boolean) => void;
+  onCancel?: () => void;
 }
 
 export interface MicrophoneRecorderHandle {
@@ -23,7 +24,10 @@ export interface MicrophoneRecorderHandle {
 }
 
 const MicrophoneRecorder = forwardRef<MicrophoneRecorderHandle, MicrophoneRecorderProps>(
-  ({ onLevelChange, onTranscribe, isProcessing, inputDeviceId, onRecordingChange }, ref) => {
+  (
+    { onLevelChange, onTranscribe, isProcessing, inputDeviceId, onRecordingChange, onCancel },
+    ref
+  ) => {
   const [error, setError] = useState<string | null>(null);
   const {
     start,
@@ -54,7 +58,8 @@ const MicrophoneRecorder = forwardRef<MicrophoneRecorderHandle, MicrophoneRecord
   const handleReset = useCallback(() => {
     reset();
     onLevelChange(0);
-  }, [onLevelChange, reset]);
+    onCancel?.();
+  }, [onCancel, onLevelChange, reset]);
 
   useEffect(() => {
     onRecordingChange?.(isRecording);

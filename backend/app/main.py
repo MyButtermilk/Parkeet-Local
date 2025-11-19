@@ -44,6 +44,9 @@ def create_app(
         upload_endpoint=f"{settings.api_prefix}/pipecat/transcriptions",
     )
 
+    hotkey_state: HotkeyEvent | None = None
+    hotkey_registered = False
+
     @app.get(f"{settings.api_prefix}/health")
     async def healthcheck() -> dict[str, str]:
         return {"status": "ok"}
@@ -56,8 +59,31 @@ def create_app(
 
     @app.post(f"{settings.api_prefix}/pipecat/events/hotkey", response_model=HotkeyRegistration)
     async def handle_hotkey(event: HotkeyEvent) -> HotkeyRegistration:
+        nonlocal hotkey_state, hotkey_registered
+
         logger.info("Received hotkey event: {}", event)
-        return HotkeyRegistration(hotkey=event.hotkey, registered=True)
+        hotkey_state = event
+
+        if event.state.lower() == "register":
+            hotkey_registered = True
+            pipecat_options.default_hotkey = event.hotkey
+            return HotkeyRegistration(hotkey=event.hotkey, registered=True)
+
+        if event.state.lower() in {"start", "stop", "toggle"}:
+            if not hotkey_registered:
+                return HotkeyRegistration(
+                    hotkey=event.hotkey,
+                    registered=False,
+                    reason="Hotkey not registered yet",
+                )
+
+            return HotkeyRegistration(hotkey=event.hotkey, registered=True)
+
+        return HotkeyRegistration(
+            hotkey=event.hotkey,
+            registered=False,
+            reason=f"Unknown hotkey state '{event.state}'",
+        )
 
     @app.post(f"{settings.api_prefix}/pipecat/transcriptions", response_model=TranscriptionResult)
     async def transcribe_audio(

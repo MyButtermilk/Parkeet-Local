@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { Button, Card } from "./ui";
 
 import { TranscriptHistoryItem } from "../App";
@@ -12,9 +12,18 @@ interface MicrophoneRecorderProps {
     filename?: string
   ) => Promise<TranscriptHistoryItem>;
   isProcessing: boolean;
+  inputDeviceId?: string;
+  onRecordingChange?: (state: boolean) => void;
 }
 
-function MicrophoneRecorder({ onLevelChange, onTranscribe, isProcessing }: MicrophoneRecorderProps) {
+export interface MicrophoneRecorderHandle {
+  startRecording: () => Promise<void>;
+  stopRecording: () => Promise<void>;
+  cancelRecording: () => void;
+}
+
+const MicrophoneRecorder = forwardRef<MicrophoneRecorderHandle, MicrophoneRecorderProps>(
+  ({ onLevelChange, onTranscribe, isProcessing, inputDeviceId, onRecordingChange }, ref) => {
   const [error, setError] = useState<string | null>(null);
   const {
     start,
@@ -23,7 +32,8 @@ function MicrophoneRecorder({ onLevelChange, onTranscribe, isProcessing }: Micro
     isRecording,
     duration
   } = useAudioRecorder({
-    onLevel: onLevelChange
+    onLevel: onLevelChange,
+    deviceId: inputDeviceId
   });
 
   const handleStart = useCallback(async () => {
@@ -45,6 +55,22 @@ function MicrophoneRecorder({ onLevelChange, onTranscribe, isProcessing }: Micro
     reset();
     onLevelChange(0);
   }, [onLevelChange, reset]);
+
+  useEffect(() => {
+    onRecordingChange?.(isRecording);
+  }, [isRecording, onRecordingChange]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      startRecording: handleStart,
+      stopRecording: async () => {
+        await handleStop();
+      },
+      cancelRecording: handleReset
+    }),
+    [handleReset, handleStart, handleStop]
+  );
 
   return (
     <Card className="glass-panel border-transparent p-6">
@@ -106,6 +132,6 @@ function MicrophoneRecorder({ onLevelChange, onTranscribe, isProcessing }: Micro
       </div>
     </Card>
   );
-}
+});
 
 export default MicrophoneRecorder;

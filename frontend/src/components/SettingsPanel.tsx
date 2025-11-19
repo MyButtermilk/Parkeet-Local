@@ -2,13 +2,15 @@ import { ChangeEvent } from "react";
 import { Card, Input, Switch } from "./ui";
 
 import type { AppSettings } from "../App";
+import type { PipecatOptions } from "../lib/api";
 
 interface SettingsPanelProps {
   settings: AppSettings;
   onChange: (settings: AppSettings) => void;
+  options?: PipecatOptions | null;
 }
 
-function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
+function SettingsPanel({ settings, onChange, options }: SettingsPanelProps) {
   const update = (partial: Partial<AppSettings>) => {
     onChange({ ...settings, ...partial });
   };
@@ -19,6 +21,43 @@ function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
+      <Card className="glass-panel border-transparent p-6">
+        <h3 className="text-lg font-semibold text-slate-100">Pipecat Models</h3>
+        <p className="mt-1 text-sm text-slate-400">
+          Choose the ASR model and streaming profile that best matches your workflow.
+        </p>
+        <div className="mt-6 space-y-4">
+          <label className="flex flex-col gap-1 text-sm text-slate-300">
+            <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Model</span>
+            <select
+              className="rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-slate-100"
+              value={settings.model}
+              onChange={(event) => update({ model: event.target.value })}
+            >
+              {(options?.models ?? [{ id: "parakeet_v3", label: "Parakeet v3", streaming: false }]).map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-slate-300">
+            <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Streaming mode</span>
+            <select
+              className="rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-slate-100"
+              value={settings.streaming_mode}
+              onChange={(event) => update({ streaming_mode: event.target.value })}
+            >
+              {(options?.streaming_modes ?? ["batch", "realtime"]).map((mode) => (
+                <option key={mode} value={mode}>
+                  {mode}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </Card>
+
       <Card className="glass-panel border-transparent p-6">
         <h3 className="text-lg font-semibold text-slate-100">Language & Punctuation</h3>
         <p className="mt-1 text-sm text-slate-400">
@@ -78,6 +117,45 @@ function SettingsPanel({ settings, onChange }: SettingsPanelProps) {
               className="h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-800 accent-indigo-400"
             />
           </div>
+        </div>
+      </Card>
+
+      <Card className="glass-panel border-transparent p-6">
+        <h3 className="text-lg font-semibold text-slate-100">Devices</h3>
+        <p className="mt-1 text-sm text-slate-400">
+          Bind Pipecat to the input and output devices exposed by the desktop wrapper.
+        </p>
+        <div className="mt-6 space-y-4">
+          <label className="flex flex-col gap-1 text-sm text-slate-300">
+            <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Input</span>
+            <select
+              className="rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-slate-100"
+              value={settings.input_device ?? ""}
+              onChange={(event) => update({ input_device: event.target.value || undefined })}
+            >
+              <option value="">System default</option>
+              {(options?.input_devices ?? []).map((device) => (
+                <option key={device.id} value={device.id}>
+                  {device.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm text-slate-300">
+            <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Output</span>
+            <select
+              className="rounded-lg border border-slate-700/60 bg-slate-900/60 px-3 py-2 text-slate-100"
+              value={settings.output_device ?? ""}
+              onChange={(event) => update({ output_device: event.target.value || undefined })}
+            >
+              <option value="">System default</option>
+              {(options?.output_devices ?? []).map((device) => (
+                <option key={device.id} value={device.id}>
+                  {device.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
       </Card>
     </div>

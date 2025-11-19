@@ -12,6 +12,26 @@ class TranscriptionSettings(BaseModel):
         default=None,
         description="Optional BCP-47 language code to bias the ASR model towards a language.",
     )
+    model: str = Field(
+        default="parakeet_v3",
+        description="Selected Pipecat model identifier to execute for transcription.",
+    )
+    streaming_mode: str = Field(
+        default="batch",
+        description="Whether to stream partial results or run a batch decode pipeline.",
+    )
+    input_device: Optional[str] = Field(
+        default=None,
+        description="Device ID for the capture source (e.g. microphone) chosen by the client.",
+    )
+    output_device: Optional[str] = Field(
+        default=None,
+        description="Device ID for playback/notifications when supported by the desktop wrapper.",
+    )
+    input_source: Optional[str] = Field(
+        default="file",
+        description="Indicates whether the request originated from a file upload or a live capture.",
+    )
     enable_punctuation: bool = Field(
         default=True,
         description="Whether to enable automatic punctuation restoration in the ASR pipeline.",
